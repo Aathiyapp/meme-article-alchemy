@@ -12,6 +12,68 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
+// Template categories based on content analysis
+const TEMPLATE_CATEGORIES = {
+  tech: ['programmer', 'sleeping-shaq', 'expanding-brain', 'this-is-fine'],
+  business: ['stonks', 'success-kid', 'angry-chef', 'boardroom-meeting'],
+  politics: ['drake', 'change-my-mind', 'surprised-pikachu', 'distracted-boyfriend'],
+  sports: ['victory-kid', 'crying-jordan', 'epic-handshake', 'strong-doge-vs-weak-doge'],
+  entertainment: ['drake', 'woman-yelling-at-cat', 'two-buttons', 'distracted-boyfriend'],
+  science: ['expanding-brain', 'galaxy-brain', 'smart-guy', 'ancient-aliens'],
+  health: ['this-is-fine', 'confused-gandalf', 'surprised-pikachu', 'thinking-emoji'],
+  general: ['drake', 'two-buttons', 'distracted-boyfriend', 'surprised-pikachu']
+};
+
+const selectTemplateForContent = (title: string, content: string): string => {
+  const text = `${title} ${content}`.toLowerCase();
+  
+  // Tech keywords
+  if (/\b(programming|software|coding|developer|javascript|python|ai|artificial intelligence|machine learning|tech|technology|startup|app|website|digital|crypto|blockchain|computer)\b/.test(text)) {
+    const techTemplates = TEMPLATE_CATEGORIES.tech;
+    return techTemplates[Math.floor(Math.random() * techTemplates.length)];
+  }
+  
+  // Business keywords
+  if (/\b(business|finance|money|investment|stock|market|economy|company|corporate|sales|marketing|revenue|profit)\b/.test(text)) {
+    const businessTemplates = TEMPLATE_CATEGORIES.business;
+    return businessTemplates[Math.floor(Math.random() * businessTemplates.length)];
+  }
+  
+  // Politics keywords
+  if (/\b(politics|government|election|policy|president|congress|vote|democracy|republican|democrat|political)\b/.test(text)) {
+    const politicsTemplates = TEMPLATE_CATEGORIES.politics;
+    return politicsTemplates[Math.floor(Math.random() * politicsTemplates.length)];
+  }
+  
+  // Sports keywords
+  if (/\b(sports|football|basketball|baseball|soccer|tennis|golf|olympics|athlete|game|match|championship|team)\b/.test(text)) {
+    const sportsTemplates = TEMPLATE_CATEGORIES.sports;
+    return sportsTemplates[Math.floor(Math.random() * sportsTemplates.length)];
+  }
+  
+  // Entertainment keywords
+  if (/\b(movie|film|music|celebrity|hollywood|entertainment|tv|show|actor|actress|singer|album|concert)\b/.test(text)) {
+    const entertainmentTemplates = TEMPLATE_CATEGORIES.entertainment;
+    return entertainmentTemplates[Math.floor(Math.random() * entertainmentTemplates.length)];
+  }
+  
+  // Science keywords
+  if (/\b(science|research|study|experiment|scientist|discovery|medical|health|climate|space|nasa|biology|chemistry|physics)\b/.test(text)) {
+    const scienceTemplates = TEMPLATE_CATEGORIES.science;
+    return scienceTemplates[Math.floor(Math.random() * scienceTemplates.length)];
+  }
+  
+  // Health keywords
+  if (/\b(health|medical|doctor|hospital|medicine|treatment|disease|wellness|fitness|nutrition|covid|pandemic)\b/.test(text)) {
+    const healthTemplates = TEMPLATE_CATEGORIES.health;
+    return healthTemplates[Math.floor(Math.random() * healthTemplates.length)];
+  }
+  
+  // Default to general templates
+  const generalTemplates = TEMPLATE_CATEGORIES.general;
+  return generalTemplates[Math.floor(Math.random() * generalTemplates.length)];
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -89,10 +151,16 @@ serve(async (req) => {
       }
     }
 
+    // Select appropriate template based on content
+    const templateId = selectTemplateForContent(articleData.title, articleData.content);
+    console.log('Selected template:', templateId, 'for content category');
+
     // Generate meme captions with OpenAI
     console.log('Generating captions with OpenAI...');
     
     const systemPrompt = `You are a meme caption generator. Given an article title and content, create funny meme captions that summarize the key point in a ${tone} tone. 
+
+The meme template being used is "${templateId}" - consider this when crafting your captions.
 
 Return ONLY a JSON object with this exact format:
 {
@@ -105,7 +173,8 @@ Guidelines:
 - Make it relatable and shareable
 - Capture the essence of the article
 - Use appropriate ${tone} tone
-- Make it meme-worthy`;
+- Make it meme-worthy
+- Consider the "${templateId}" template context`;
 
     const userPrompt = `Article: "${articleData.title}"
 Content: "${articleData.content.slice(0, 1000)}"`;
@@ -149,10 +218,9 @@ Content: "${articleData.content.slice(0, 1000)}"`;
     // Generate meme image URL using memegen.link
     const topText = encodeURIComponent(captions.top_text || "TOP TEXT");
     const bottomText = encodeURIComponent(captions.bottom_text || "BOTTOM TEXT");
-    const templateId = "drake"; // Default template, could be randomized
     const memeImageUrl = `https://api.memegen.link/images/${templateId}/${topText}/${bottomText}.jpg`;
 
-    console.log('Generated meme URL:', memeImageUrl);
+    console.log('Generated meme URL:', memeImageUrl, 'using template:', templateId);
 
     // Save to database
     const { data: savedMeme, error: saveError } = await supabase

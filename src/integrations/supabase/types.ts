@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      meme_analytics: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          meme_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          meme_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          meme_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meme_analytics_meme_id_fkey"
+            columns: ["meme_id"]
+            isOneToOne: false
+            referencedRelation: "meme_generations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meme_generations: {
+        Row: {
+          article_content: string | null
+          article_title: string | null
+          bottom_text: string
+          created_at: string
+          id: string
+          meme_image_url: string
+          template_id: string | null
+          tone: Database["public"]["Enums"]["meme_tone"]
+          top_text: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          article_content?: string | null
+          article_title?: string | null
+          bottom_text: string
+          created_at?: string
+          id?: string
+          meme_image_url: string
+          template_id?: string | null
+          tone: Database["public"]["Enums"]["meme_tone"]
+          top_text: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          article_content?: string | null
+          article_title?: string | null
+          bottom_text?: string
+          created_at?: string
+          id?: string
+          meme_image_url?: string
+          template_id?: string | null
+          tone?: Database["public"]["Enums"]["meme_tone"]
+          top_text?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      url_cache: {
+        Row: {
+          content: string | null
+          expires_at: string
+          id: string
+          scraped_at: string
+          title: string | null
+          url: string
+        }
+        Insert: {
+          content?: string | null
+          expires_at?: string
+          id?: string
+          scraped_at?: string
+          title?: string | null
+          url: string
+        }
+        Update: {
+          content?: string | null
+          expires_at?: string
+          id?: string
+          scraped_at?: string
+          title?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +123,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      meme_tone: "best-fit" | "sarcastic" | "wholesome" | "ironic"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +250,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      meme_tone: ["best-fit", "sarcastic", "wholesome", "ironic"],
+    },
   },
 } as const
